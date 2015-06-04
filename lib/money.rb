@@ -1,4 +1,9 @@
+$LOAD_PATH.unshift(File.dirname(__FILE__))
+require 'exchange'
+
 class Money
+  attr_reader :amount, :currency
+
   def initialize(amount, currency)
     @amount = amount
     @currency = currency.upcase
@@ -18,6 +23,14 @@ class Money
         Money.new(arg, currency)
       end
     end
+  end
+
+  def self.exchange
+    Exchange.new
+  end
+
+  def exchange_to(currency)
+    self.class.exchange.convert(self, currency)
   end
 end
 

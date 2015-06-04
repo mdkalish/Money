@@ -26,22 +26,54 @@ describe Money do
     end
 
     it 'return correct value' do
-      ['usd', 'eur', 'gbp'].each do |currency|
-        method = "from_#{currency}".to_sym
-        expect(Money.send(method, 10).inspect).to eq("#<Money 10 #{currency.upcase}>")
+      ['USD', 'EUR', 'GBP'].each do |currency|
+        method = "from_#{currency.downcase}".to_sym
+        expect(Money.send(method, 10).inspect).to eq("#<Money 10 #{currency}>")
       end
     end
   end
 
-  describe 'notation Money(amount, currency)' do
-    let (:money) { Money(10, 'usd') }
+  describe 'Money(amount, currency)' do
+    let (:money_2) { Money(10, 'usd') }
 
     it 'returns correct object' do
-      expect(money.class).to eq(Money)
+      expect(money_2.class).to eq(Money)
     end
 
     it 'returns correct value' do
-      expect(money.inspect).to eq("#<Money 10 USD>")
+      expect(money_2.inspect).to eq("#<Money 10 USD>")
+    end
+  end
+
+  describe 'exchanging' do
+    context 'when currencies are valid' do
+      before { allow(Rates).to receive(:index).and_return(40.0) }
+
+      describe '::exchange' do
+        it 'returns correct value' do
+          expect(Money.exchange.convert(money, 'USD')).to eq(400.0)
+        end
+      end
+
+      describe '#exchange_to' do
+        it 'returns correct value' do
+          expect(money.exchange_to('USD')).to eq(400.0)
+        end
+      end
+    end
+
+    context 'when a currency is invalid' do
+      describe '::exchange' do
+        it 'raises InvalidCurrency exception' do
+          expect { Money.exchange.convert(money, 'XXX') }.to raise_exception(InvalidCurrency, 'Unknown ratio: PLN/XXX')
+        end
+      end
+
+      describe '#exchange_to' do
+        it 'raises InvalidCurrency exception' do
+          expect { money.exchange_to('YYY') }.to raise_exception(InvalidCurrency, 'Unknown ratio: PLN/YYY')
+        end
+      end
     end
   end
 end
