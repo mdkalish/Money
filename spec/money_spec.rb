@@ -3,6 +3,18 @@ require 'money'
 describe Money do
   let(:money) { Money.new(10, 'pln') }
 
+  describe '#to_s' do
+    it 'returns correct string' do
+      expect(money.to_s).to eq('10 PLN')
+    end
+  end
+
+  describe '#inspect' do
+    it 'returns correct string' do
+      expect(money.inspect).to eq('#<Money 10 PLN>')
+    end
+  end
+
   describe 'meta methods' do
     let(:Money) { Money }
 
@@ -21,15 +33,15 @@ describe Money do
     end
   end
 
-  describe '#to_s' do
-    it 'returns correct string' do
-      expect(money.to_s).to eq('10 PLN')
-    end
-  end
+  describe 'notation Money(amount, currency)' do
+    let (:money) { Money(10, 'usd') }
 
-  describe '#inspect' do
-    it 'returns correct string' do
-      expect(money.inspect).to eq('#<Money 10 PLN>')
+    it 'returns correct object' do
+      expect(money.class).to eq(Money)
+    end
+
+    it 'returns correct value' do
+      expect(money.inspect).to eq("#<Money 10 USD>")
     end
   end
 end

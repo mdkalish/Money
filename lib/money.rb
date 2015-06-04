@@ -20,3 +20,9 @@ class Money
     end
   end
 end
+
+class Object
+  def Money(amount, currency)
+    Money.new(amount, currency)
+  end
+end
