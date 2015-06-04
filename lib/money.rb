@@ -11,4 +11,12 @@ class Money
   def inspect
     "#<#{self.class} #{to_s}>"
   end
+
+  class << self
+    ['usd', 'eur', 'gbp'].each do |currency|
+      define_method("from_#{currency}") do |arg|
+        Money.new(arg, currency)
+      end
+    end
+  end
 end
