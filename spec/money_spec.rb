@@ -36,8 +36,8 @@ describe Money do
   describe 'Money(amount, currency)' do
     let (:money_2) { Money(10, 'usd') }
 
-    it 'returns correct object' do
-      expect(money_2.class).to eq(Money)
+    it 'returns correct class instance' do
+      expect(money_2).to be_instance_of(Money)
     end
 
     it 'returns correct value' do
@@ -72,6 +72,127 @@ describe Money do
       describe '#exchange_to' do
         it 'raises InvalidCurrency exception' do
           expect { money.exchange_to('YYY') }.to raise_exception(InvalidCurrency, 'Unknown ratio: PLN/YYY')
+        end
+      end
+    end
+  end
+
+  describe 'comparing' do
+    describe '#==' do
+      it 'returns true for equal values' do
+        expect(money == Money(10, 'pln')).to be_truthy
+      end
+
+      context 'when amount is different' do
+        it 'returns false for unequal value' do
+          expect(money == Money(11, 'pln')).to be_falsey
+        end
+      end
+
+      context 'when currency is different' do
+        before { allow(Rates).to receive(:index).with('GBP', 'PLN').and_return(5.5) }
+
+        it 'returns false for unequal value' do
+          expect(money == Money(10, 'gbp')).to be_falsey
+        end
+      end
+    end
+
+    describe '#>' do
+      it 'returns false for equal values' do
+        expect(money > Money(10, 'pln')).to be_falsey
+      end
+
+      context 'when first value is greater in amount' do
+        it 'returns true' do
+          expect(money > Money(9, 'pln')).to be_truthy
+        end
+      end
+
+      context 'when first value is greater by currency' do
+        before { allow(Rates).to receive(:index).with('PLN', 'GBP').and_return(0.2) }
+        it 'returns true' do
+          expect(Money(10, 'gbp') > money).to be_truthy
+        end
+      end
+
+      context 'when values are same at different currencies' do
+        before { allow(Rates).to receive(:index).with('EUR', 'CHF').and_return(1.0) }
+
+        it 'returns false' do
+          expect(Money(10, 'chf') > Money(10, 'eur')).to be_falsey
+        end
+      end
+    end
+
+    describe '#>=' do
+      it 'returns true for equal values' do
+        expect(money >= Money(10, 'pln')).to be_truthy
+      end
+
+      context 'when first value is greater in amount' do
+        it 'returns true' do
+          expect(money >= Money(9, 'pln')).to be_truthy
+        end
+      end
+
+      context 'when first value is greater by currency' do
+        before { allow(Rates).to receive(:index).with('PLN', 'GBP').and_return(0.2) }
+
+        it 'returns true' do
+          expect(Money(10, 'gbp') >= money).to be_truthy
+        end
+      end
+
+      context 'when values are same at different currencies' do
+        before { allow(Rates).to receive(:index).with('EUR', 'CHF').and_return(1.0) }
+
+        it 'returns true' do
+          expect(Money(10, 'chf') >= Money(10, 'eur')).to be_truthy
+        end
+      end
+    end
+
+    describe '#<=>' do
+      context 'when currencies are the same' do
+        context 'when values are equal' do
+          it 'returns 0' do
+            expect(money <=> Money(10, 'pln')).to eq(0)
+          end
+        end
+
+        context 'when first value is less than the other' do
+          it 'returns -1' do
+            expect(money <=> Money(11, 'pln')).to eq(-1)
+          end
+        end
+
+        context 'when first value is greater than the other' do
+          it 'returns 1' do
+            expect(money <=> Money(9, 'pln')).to eq(1)
+          end
+        end
+      end
+
+      context 'when currencies are different' do
+        before { allow(Rates).to receive(:index).with('EUR', 'CHF').and_return(1.0) }
+
+        context 'when values are equal' do
+          it 'returns 0' do
+            expect(Money(10, 'chf') <=> Money(10, 'eur')).to eq(0)
+          end
+        end
+
+        context 'when first value is less than the other' do
+          it 'returns -1' do
+            expect(Money(9, 'chf') <=> Money(10, 'eur')).to eq(-1)
+          end
+        end
+
+        context 'when first value is greater than the other' do
+          it 'returns 1' do
+            expect(Money(10, 'chf') <=> Money(9, 'eur')).to eq(1)
+          end
         end
       end
     end

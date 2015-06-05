@@ -3,6 +3,7 @@ require 'exchange'
 
 class Money
   attr_reader :amount, :currency
+  include Comparable
 
   def initialize(amount, currency)
     @amount = amount
@@ -31,6 +32,10 @@ class Money
 
   def exchange_to(currency)
     self.class.exchange.convert(self, currency)
+  end
+
+  def <=>(anOther)
+    self.amount <=> anOther.exchange_to(self.currency)
   end
 end
 
