@@ -5,8 +5,8 @@ class Money
   attr_reader :amount, :currency
   include Comparable
 
-  def initialize(amount, currency)
-    @amount = amount
+  def initialize(amount, currency = Money.default_currency)
+    @amount = amount.to_i
     @currency = currency.upcase
   end
 
@@ -19,6 +19,8 @@ class Money
   end
 
   class << self
+    attr_accessor :default_currency
+
     ['usd', 'eur', 'gbp'].each do |currency|
       define_method("from_#{currency}") do |arg|
         Money.new(arg, currency)
@@ -37,10 +39,18 @@ class Money
   def <=>(anOther)
     self.amount <=> anOther.exchange_to(self.currency)
   end
+
+  def self.using_default_currency(default_currency, &block)
+    super_default_currency = self.default_currency
+    self.default_currency = default_currency
+    y = yield
+    self.default_currency = super_default_currency
+    y
+  end
 end
 
 class Object
-  def Money(amount, currency)
+  def Money(amount, currency = Money.default_currency)
     Money.new(amount, currency)
   end
 end

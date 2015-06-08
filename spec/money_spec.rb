@@ -3,6 +3,16 @@ require 'money'
 describe Money do
   let(:money) { Money.new(10, 'pln') }
 
+  describe '::new' do
+    it 'raises error if no currency is given' do
+      expect { Money.new(10) }.to raise_error
+    end
+
+    it 'raises error if no amount is given' do
+      expect { Money.new('usd') }.to raise_error
+    end
+  end
+
   describe '#to_s' do
     it 'returns correct string' do
       expect(money.to_s).to eq('10 PLN')
@@ -42,6 +52,14 @@ describe Money do
 
     it 'returns correct value' do
       expect(money_2.inspect).to eq("#<Money 10 USD>")
+    end
+
+    it 'raises error if no currency is given' do
+      expect{ Money(10) }.to raise_error
+    end
+
+    it 'raises error if no amount is given' do
+      expect{ Money('usd') }.to raise_error
     end
   end
 
@@ -192,6 +210,82 @@ describe Money do
         context 'when first value is greater than the other' do
           it 'returns 1' do
             expect(Money(10, 'chf') <=> Money(9, 'eur')).to eq(1)
+          end
+        end
+      end
+    end
+  end
+
+  describe '::using_default_currency' do
+    describe '::new()' do
+      context 'when called in the block' do
+        it 'evaluates correctly to default_currency' do
+          Money.using_default_currency('usd') do
+            expect(Money.new(10).inspect).to eq('#<Money 10 USD>')
+          end
+        end
+
+        it 'evaluates correctly to args currency' do
+          Money.using_default_currency('usd') do
+            expect(Money.new(10, 'pln').inspect).to eq('#<Money 10 PLN>')
+          end
+        end
+
+        context 'when called in a nested block' do
+          it 'evaluates to default_currency set for correct block scope' do
+            Money.using_default_currency('usd') do
+              Money.using_default_currency('eur') do
+                expect(Money.new(10).inspect).to eq('#<Money 10 EUR>')
+              end
+            end
+          end
+        end
+
+        context 'when called after nested block has been evaluated' do
+          it 'evaluates to default_currency set for correct block scope' do
+            Money.using_default_currency('usd') do
+              Money.using_default_currency('eur') do
+                expect(Money.new(10).inspect).to eq('#<Money 10 EUR>')
+              end
+              expect(Money.new(9).inspect).to eq('#<Money 9 USD>')
+            end
+          end
+        end
+      end
+    end
+
+    describe 'Money()' do
+      context 'when called in the block' do
+        it 'evaluates correctly to default_currency' do
+          Money.using_default_currency('usd') do
+            expect(Money(10).inspect).to eq('#<Money 10 USD>')
+          end
+        end
+
+        it 'evaluates correctly to args currency' do
+          Money.using_default_currency('usd') do
+            expect(Money(10, 'pln').inspect).to eq('#<Money 10 PLN>')
+          end
+        end
+
+        context 'when called in a nested block' do
+          it 'evaluates to default_currency set for correct block scope' do
+            Money.using_default_currency('usd') do
+              Money.using_default_currency('eur') do
+                expect(Money(10).inspect).to eq('#<Money 10 EUR>')
+              end
+            end
+          end
+        end
+
+        context 'when called after nested block has been evaluated' do
+          it 'evaluates to default_currency set for correct block scope' do
+            Money.using_default_currency('usd') do
+              Money.using_default_currency('eur') do
+                expect(Money(10).inspect).to eq('#<Money 10 EUR>')
+              end
+              expect(Money(9).inspect).to eq('#<Money 9 USD>')
+            end
           end
         end
       end
