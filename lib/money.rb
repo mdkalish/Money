@@ -44,6 +44,7 @@ class Money
     super_default_currency = self.default_currency
     self.default_currency = default_currency
     y = yield
+  ensure
     self.default_currency = super_default_currency
     y
   end

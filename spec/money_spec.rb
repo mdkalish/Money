@@ -252,6 +252,19 @@ describe Money do
           end
         end
       end
+
+      context 'when called outside the block' do
+        before do
+          begin
+            Money.using_default_currency('usd') { fail }
+          rescue
+          end
+        end
+
+        it 'raises NoMethodError after other block failed to yield' do
+          expect { Money.new(10) }.to raise_error(NoMethodError)
+        end
+      end
     end
 
     describe 'Money()' do
@@ -287,6 +300,19 @@ describe Money do
               expect(Money(9).inspect).to eq('#<Money 9 USD>')
             end
           end
+        end
+      end
+
+      context 'when called outside the block' do
+        before do
+          begin
+            Money.using_default_currency('usd') { fail }
+          rescue
+          end
+        end
+
+        it 'raises NoMethodError after other block failed to yield' do
+          expect { Money(10) }.to raise_error(NoMethodError)
         end
       end
     end
