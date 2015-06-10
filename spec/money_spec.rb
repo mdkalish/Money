@@ -1,6 +1,8 @@
 require 'money'
 
 describe Money do
+  KNOWN_CURRENCIES = Rates::KNOWN_CURRENCIES
+  CONVERSIONS = Money::CONVERSIONS
   let(:money) { Money.new(10, 'pln') }
 
   describe '::new' do
@@ -25,20 +27,40 @@ describe Money do
     end
   end
 
-  describe 'meta methods' do
+  describe '::from_<currency>' do
     let(:Money) { Money }
 
     it 'exist and respond' do
-      ['usd', 'eur', 'gbp'].each do |currency|
+      KNOWN_CURRENCIES.each do |currency|
         method = "from_#{currency}"
         expect(Money).to respond_to(method)
       end
     end
 
     it 'return correct value' do
-      ['USD', 'EUR', 'GBP'].each do |currency|
-        method = "from_#{currency.downcase}".to_sym
-        expect(Money.send(method, 10).inspect).to eq("#<Money 10 #{currency}>")
+      KNOWN_CURRENCIES.each do |currency|
+        method = "from_#{currency}".to_sym
+        expect(Money.send(method, 10).inspect).to eq("#<Money 10 #{currency.upcase}>")
+      end
+    end
+  end
+
+  describe '#to_<currency>' do
+    before { allow(Rates).to receive(:index).and_return(2.0) }
+
+    it 'return correct values' do
+      CONVERSIONS.each do |cm|
+        expect(money.send(cm)).to eq(20.0)
+      end
+    end
+
+    it 'raises NoMethodError if <currency> is unknown' do
+      expect { money.to_unknown }.to raise_error(NoMethodError)
+    end
+
+    it 'Money instances responses to these methods' do
+      CONVERSIONS.each do |cm|
+        expect(money).to respond_to(cm)
       end
     end
   end

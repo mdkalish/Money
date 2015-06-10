@@ -1,4 +1,6 @@
 class Rates
+  KNOWN_CURRENCIES = ["usd", "eur", "gbp", "chf", "jpy", "pln"]
+
   def self.index(c1, c2)
     c1.upcase!; c2.upcase!
     {
