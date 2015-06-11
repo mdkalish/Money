@@ -1,5 +1,3 @@
-require 'money'
-
 describe Money do
   KNOWN_CURRENCIES = Rates::KNOWN_CURRENCIES
   CONVERSIONS = Money::CONVERSIONS
@@ -23,13 +21,11 @@ describe Money do
 
   describe '#inspect' do
     it 'returns correct string' do
-      expect(money.inspect).to eq('#<Money 10 PLN>')
+      expect(money.inspect).to eq('#<CurrencyConverter::Money 10 PLN>')
     end
   end
 
   describe '::from_<currency>' do
-    let(:Money) { Money }
-
     it 'exist and respond' do
       KNOWN_CURRENCIES.each do |currency|
         method = "from_#{currency}"
@@ -40,7 +36,7 @@ describe Money do
     it 'return correct value' do
       KNOWN_CURRENCIES.each do |currency|
         method = "from_#{currency}".to_sym
-        expect(Money.send(method, 10).inspect).to eq("#<Money 10 #{currency.upcase}>")
+        expect(Money.send(method, 10).inspect).to eq("#<CurrencyConverter::Money 10 #{currency.upcase}>")
       end
     end
   end
@@ -73,7 +69,7 @@ describe Money do
     end
 
     it 'returns correct value' do
-      expect(money_2.inspect).to eq("#<Money 10 USD>")
+      expect(money_2.inspect).to eq("#<CurrencyConverter::Money 10 USD>")
     end
 
     it 'raises error if no currency is given' do
@@ -243,13 +239,13 @@ describe Money do
       context 'when called in the block' do
         it 'evaluates correctly to default_currency' do
           Money.using_default_currency('usd') do
-            expect(Money.new(10).inspect).to eq('#<Money 10 USD>')
+            expect(Money.new(10).inspect).to eq('#<CurrencyConverter::Money 10 USD>')
           end
         end
 
         it 'evaluates correctly to args currency' do
           Money.using_default_currency('usd') do
-            expect(Money.new(10, 'pln').inspect).to eq('#<Money 10 PLN>')
+            expect(Money.new(10, 'pln').inspect).to eq('#<CurrencyConverter::Money 10 PLN>')
           end
         end
 
@@ -257,7 +253,7 @@ describe Money do
           it 'evaluates to default_currency set for correct block scope' do
             Money.using_default_currency('usd') do
               Money.using_default_currency('eur') do
-                expect(Money.new(10).inspect).to eq('#<Money 10 EUR>')
+                expect(Money.new(10).inspect).to eq('#<CurrencyConverter::Money 10 EUR>')
               end
             end
           end
@@ -267,9 +263,9 @@ describe Money do
           it 'evaluates to default_currency set for correct block scope' do
             Money.using_default_currency('usd') do
               Money.using_default_currency('eur') do
-                expect(Money.new(10).inspect).to eq('#<Money 10 EUR>')
+                expect(Money.new(10).inspect).to eq('#<CurrencyConverter::Money 10 EUR>')
               end
-              expect(Money.new(9).inspect).to eq('#<Money 9 USD>')
+              expect(Money.new(9).inspect).to eq('#<CurrencyConverter::Money 9 USD>')
             end
           end
         end
@@ -293,13 +289,13 @@ describe Money do
       context 'when called in the block' do
         it 'evaluates correctly to default_currency' do
           Money.using_default_currency('usd') do
-            expect(Money(10).inspect).to eq('#<Money 10 USD>')
+            expect(Money(10).inspect).to eq('#<CurrencyConverter::Money 10 USD>')
           end
         end
 
         it 'evaluates correctly to args currency' do
           Money.using_default_currency('usd') do
-            expect(Money(10, 'pln').inspect).to eq('#<Money 10 PLN>')
+            expect(Money(10, 'pln').inspect).to eq('#<CurrencyConverter::Money 10 PLN>')
           end
         end
 
@@ -307,7 +303,7 @@ describe Money do
           it 'evaluates to default_currency set for correct block scope' do
             Money.using_default_currency('usd') do
               Money.using_default_currency('eur') do
-                expect(Money(10).inspect).to eq('#<Money 10 EUR>')
+                expect(Money(10).inspect).to eq('#<CurrencyConverter::Money 10 EUR>')
               end
             end
           end
@@ -317,9 +313,9 @@ describe Money do
           it 'evaluates to default_currency set for correct block scope' do
             Money.using_default_currency('usd') do
               Money.using_default_currency('eur') do
-                expect(Money(10).inspect).to eq('#<Money 10 EUR>')
+                expect(Money(10).inspect).to eq('#<CurrencyConverter::Money 10 EUR>')
               end
-              expect(Money(9).inspect).to eq('#<Money 9 USD>')
+              expect(Money(9).inspect).to eq('#<CurrencyConverter::Money 9 USD>')
             end
           end
         end

@@ -1,5 +1,3 @@
-require 'rates'
-
 describe Rates do
   describe '#index' do
     it 'returns correct ratio' do

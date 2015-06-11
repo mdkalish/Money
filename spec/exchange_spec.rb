@@ -1,5 +1,3 @@
-require 'money'
-
 describe Exchange do
   let (:money)    { Money(1, 'PLN') }
   let (:exchange) { Exchange.new }

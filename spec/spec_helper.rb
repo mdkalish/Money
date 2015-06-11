@@ -1,3 +1,7 @@
+$LOAD_PATH.unshift(File.dirname(__FILE__))
+require 'currency_converter'
+include CurrencyConverter
+
 RSpec.configure do |config|
   config.filter_run :focus
   config.run_all_when_everything_filtered = true
