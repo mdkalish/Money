@@ -48,6 +48,6 @@ end
 
 class Object
   def Rates(c1, c2)
-    Rates.index(c1, c2)
+    CurrencyConverter::Rates.index(c1, c2)
   end
 end

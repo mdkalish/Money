@@ -61,6 +61,6 @@ end
 
 class Object
   def Money(amount, currency = Money.default_currency)
-    Money.new(amount, currency)
+    CurrencyConverter::Money.new(amount, currency)
   end
 end
