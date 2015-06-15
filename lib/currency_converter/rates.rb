@@ -4,7 +4,7 @@ module CurrencyConverter
 
     def self.index(c1, c2)
       c1.upcase!; c2.upcase!
-      {
+      rate = {
         "USD_USD"=>1,
         "USD_EUR"=>0.8896,
         "USD_GBP"=>0.6506,
@@ -42,6 +42,7 @@ module CurrencyConverter
         "PLN_JPY"=>33.5366,
         "PLN_PLN"=>1
       }["#{c1}_#{c2}"]
+      BigDecimal(rate.to_s) unless rate.nil?
     end
   end
 end

@@ -28,12 +28,12 @@ module CurrencyConverter
     end
 
     def initialize(amount, currency = Money.default_currency)
-      @amount = amount.to_i
+      @amount = BigDecimal(amount.to_s)
       @currency = currency.upcase
     end
 
     def to_s
-      "#{@amount} #{@currency}"
+      "#{@amount.to_digits} #{@currency}"
     end
 
     def inspect

@@ -1,7 +1,8 @@
 describe Money do
   KNOWN_CURRENCIES = Rates::KNOWN_CURRENCIES
   CONVERSIONS = Money::CONVERSIONS
-  let(:money) { Money.new(10, 'pln') }
+  let(:money) { Money.new(10.54, 'pln') }
+  let(:rate) { BigDecimal('2.0') }
 
   describe '::new' do
     it 'raises error if no currency is given' do
@@ -15,13 +16,13 @@ describe Money do
 
   describe '#to_s' do
     it 'returns correct string' do
-      expect(money.to_s).to eq('10 PLN')
+      expect(money.to_s).to eq('10.54 PLN')
     end
   end
 
   describe '#inspect' do
     it 'returns correct string' do
-      expect(money.inspect).to eq('#<CurrencyConverter::Money 10 PLN>')
+      expect(money.inspect).to eq('#<CurrencyConverter::Money 10.54 PLN>')
     end
   end
 
@@ -36,17 +37,17 @@ describe Money do
     it 'return correct value' do
       KNOWN_CURRENCIES.each do |currency|
         method = "from_#{currency}".to_sym
-        expect(Money.send(method, 10).inspect).to eq("#<CurrencyConverter::Money 10 #{currency.upcase}>")
+        expect(Money.send(method, 10.3).inspect).to eq("#<CurrencyConverter::Money 10.3 #{currency.upcase}>")
       end
     end
   end
 
   describe '#to_<currency>' do
-    before { allow(Rates).to receive(:index).and_return(2.0) }
+    before { allow(Rates).to receive(:index).and_return(rate) }
 
     it 'return correct values' do
       CONVERSIONS.each do |cm|
-        expect(money.send(cm)).to eq(20.0)
+        expect(money.send(cm)).to eq(money.amount * rate)
       end
     end
 
@@ -62,14 +63,14 @@ describe Money do
   end
 
   describe 'Money(amount, currency)' do
-    let (:money_2) { Money(10, 'usd') }
+    let (:money_2) { Money(10.55, 'usd') }
 
     it 'returns correct class instance' do
       expect(money_2).to be_instance_of(Money)
     end
 
     it 'returns correct value' do
-      expect(money_2.inspect).to eq("#<CurrencyConverter::Money 10 USD>")
+      expect(money_2.inspect).to eq("#<CurrencyConverter::Money 10.55 USD>")
     end
 
     it 'raises error if no currency is given' do
@@ -83,17 +84,17 @@ describe Money do
 
   describe 'exchanging' do
     context 'when currencies are valid' do
-      before { allow(Rates).to receive(:index).and_return(40.0) }
+      before { allow(Rates).to receive(:index).and_return(rate) }
 
       describe '::exchange' do
         it 'returns correct value' do
-          expect(Money.exchange.convert(money, 'USD')).to eq(400.0)
+          expect(Money.exchange.convert(money, 'USD')).to eq(21.08)
         end
       end
 
       describe '#exchange_to' do
         it 'returns correct value' do
-          expect(money.exchange_to('USD')).to eq(400.0)
+          expect(money.exchange_to('USD')).to eq(21.08)
         end
       end
     end
@@ -116,7 +117,7 @@ describe Money do
   describe 'comparing' do
     describe '#==' do
       it 'returns true for equal values' do
-        expect(money == Money(10, 'pln')).to be_truthy
+        expect(money == Money(10.54, 'pln')).to be_truthy
       end
 
       context 'when amount is different' do
@@ -126,7 +127,7 @@ describe Money do
       end
 
       context 'when currency is different' do
-        before { allow(Rates).to receive(:index).with('GBP', 'PLN').and_return(5.5) }
+        before { allow(Rates).to receive(:index).with('GBP', 'PLN').and_return(rate) }
 
         it 'returns false for unequal value' do
           expect(money == Money(10, 'gbp')).to be_falsey
@@ -136,12 +137,12 @@ describe Money do
 
     describe '#>' do
       it 'returns false for equal values' do
-        expect(money > Money(10, 'pln')).to be_falsey
+        expect(money > Money(10.54, 'pln')).to be_falsey
       end
 
       context 'when first value is greater in amount' do
         it 'returns true' do
-          expect(money > Money(9, 'pln')).to be_truthy
+          expect(money > Money(10, 'pln')).to be_truthy
         end
       end
 
@@ -176,7 +177,7 @@ describe Money do
         before { allow(Rates).to receive(:index).with('PLN', 'GBP').and_return(0.2) }
 
         it 'returns true' do
-          expect(Money(10, 'gbp') >= money).to be_truthy
+          expect(Money(10.54, 'gbp') >= money).to be_truthy
         end
       end
 
@@ -193,7 +194,7 @@ describe Money do
       context 'when currencies are the same' do
         context 'when values are equal' do
           it 'returns 0' do
-            expect(money <=> Money(10, 'pln')).to eq(0)
+            expect(money <=> Money(10.54, 'pln')).to eq(0)
           end
         end
 
@@ -205,7 +206,7 @@ describe Money do
 
         context 'when first value is greater than the other' do
           it 'returns 1' do
-            expect(money <=> Money(9, 'pln')).to eq(1)
+            expect(money <=> Money(10, 'pln')).to eq(1)
           end
         end
       end
@@ -239,13 +240,13 @@ describe Money do
       context 'when called in the block' do
         it 'evaluates correctly to default_currency' do
           Money.using_default_currency('usd') do
-            expect(Money.new(10).inspect).to eq('#<CurrencyConverter::Money 10 USD>')
+            expect(Money.new(10).inspect).to eq('#<CurrencyConverter::Money 10.0 USD>')
           end
         end
 
         it 'evaluates correctly to args currency' do
           Money.using_default_currency('usd') do
-            expect(Money.new(10, 'pln').inspect).to eq('#<CurrencyConverter::Money 10 PLN>')
+            expect(Money.new(10, 'pln').inspect).to eq('#<CurrencyConverter::Money 10.0 PLN>')
           end
         end
 
@@ -253,7 +254,7 @@ describe Money do
           it 'evaluates to default_currency set for correct block scope' do
             Money.using_default_currency('usd') do
               Money.using_default_currency('eur') do
-                expect(Money.new(10).inspect).to eq('#<CurrencyConverter::Money 10 EUR>')
+                expect(Money.new(10).inspect).to eq('#<CurrencyConverter::Money 10.0 EUR>')
               end
             end
           end
@@ -263,9 +264,9 @@ describe Money do
           it 'evaluates to default_currency set for correct block scope' do
             Money.using_default_currency('usd') do
               Money.using_default_currency('eur') do
-                expect(Money.new(10).inspect).to eq('#<CurrencyConverter::Money 10 EUR>')
+                expect(Money.new(10).inspect).to eq('#<CurrencyConverter::Money 10.0 EUR>')
               end
-              expect(Money.new(9).inspect).to eq('#<CurrencyConverter::Money 9 USD>')
+              expect(Money.new(9).inspect).to eq('#<CurrencyConverter::Money 9.0 USD>')
             end
           end
         end
@@ -289,13 +290,13 @@ describe Money do
       context 'when called in the block' do
         it 'evaluates correctly to default_currency' do
           Money.using_default_currency('usd') do
-            expect(Money(10).inspect).to eq('#<CurrencyConverter::Money 10 USD>')
+            expect(Money(10).inspect).to eq('#<CurrencyConverter::Money 10.0 USD>')
           end
         end
 
         it 'evaluates correctly to args currency' do
           Money.using_default_currency('usd') do
-            expect(Money(10, 'pln').inspect).to eq('#<CurrencyConverter::Money 10 PLN>')
+            expect(Money(10, 'pln').inspect).to eq('#<CurrencyConverter::Money 10.0 PLN>')
           end
         end
 
@@ -303,7 +304,7 @@ describe Money do
           it 'evaluates to default_currency set for correct block scope' do
             Money.using_default_currency('usd') do
               Money.using_default_currency('eur') do
-                expect(Money(10).inspect).to eq('#<CurrencyConverter::Money 10 EUR>')
+                expect(Money(10).inspect).to eq('#<CurrencyConverter::Money 10.0 EUR>')
               end
             end
           end
@@ -313,9 +314,9 @@ describe Money do
           it 'evaluates to default_currency set for correct block scope' do
             Money.using_default_currency('usd') do
               Money.using_default_currency('eur') do
-                expect(Money(10).inspect).to eq('#<CurrencyConverter::Money 10 EUR>')
+                expect(Money(10).inspect).to eq('#<CurrencyConverter::Money 10.0 EUR>')
               end
-              expect(Money(9).inspect).to eq('#<CurrencyConverter::Money 9 USD>')
+              expect(Money(9).inspect).to eq('#<CurrencyConverter::Money 9.0 USD>')
             end
           end
         end
