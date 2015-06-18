@@ -189,4 +189,21 @@ describe Money do
       end
     end
   end
+
+  describe '#+' do
+    before { allow(money).to receive(:exchange_to).and_return(2.0) }
+    context 'when adding the same currency' do
+      it { expect(money + money).to eq(Money(12.54, 'pln')) }
+    end
+
+    context 'when adding different currencies' do
+      it 'returns result in first currency' do
+        expect(Money(10.234, 'chf') + money).to eq(Money(12.234, 'chf'))
+      end
+    end
+  end
+
+  describe '#*' do
+    it { expect(money * 2).to eq(Money(21.08, 'PLN')) }
+  end
 end

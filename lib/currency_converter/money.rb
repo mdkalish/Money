@@ -56,6 +56,15 @@ module CurrencyConverter
     def respond_to?(method_sym, include_private = false)
       CONVERSIONS.include?(method_sym.to_s) ? true : super
     end
+
+    def +(anOther)
+      result = self.amount + anOther.exchange_to(self.currency)
+      Money(result, self.currency)
+    end
+
+    def *(number)
+      Money(self.amount * number, self.currency)
+    end
   end
 end
 
