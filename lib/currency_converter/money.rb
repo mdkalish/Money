@@ -1,7 +1,7 @@
 module CurrencyConverter
   class Money
     include Comparable
-    KNOWN_CURRENCIES = Rates::KNOWN_CURRENCIES
+    KNOWN_CURRENCIES = RatesFetcher::KNOWN_CURRENCIES
     CONVERSIONS = KNOWN_CURRENCIES.map { |c| "to_#{c}" }
     attr_reader :amount, :currency
 

@@ -1,235 +1,88 @@
 describe Money do
-  KNOWN_CURRENCIES = Rates::KNOWN_CURRENCIES
+  KNOWN_CURRENCIES = RatesFetcher::KNOWN_CURRENCIES
   CONVERSIONS = Money::CONVERSIONS
   let(:money) { Money.new(10.54, 'pln') }
   let(:rate) { BigDecimal('2.0') }
-
   describe '::new' do
-    it 'raises error if no currency is given' do
-      expect { Money.new(10) }.to raise_error
+    context 'when no currency is given' do
+      it { expect { Money.new(10) }.to raise_error }
     end
 
-    it 'raises error if no amount is given' do
-      expect { Money.new('usd') }.to raise_error
+    context 'when no amount is given' do
+      it { expect { Money.new('usd') }.to raise_error }
     end
   end
 
   describe '#to_s' do
-    it 'returns correct string' do
-      expect(money.to_s).to eq('10.54 PLN')
-    end
+    it { expect(money.to_s).to eq('10.54 PLN') }
   end
 
   describe '#inspect' do
-    it 'returns correct string' do
-      expect(money.inspect).to eq('#<CurrencyConverter::Money 10.54 PLN>')
-    end
-  end
-
-  describe '::from_<currency>' do
-    it 'exist and respond' do
-      KNOWN_CURRENCIES.each do |currency|
-        method = "from_#{currency}"
-        expect(Money).to respond_to(method)
-      end
-    end
-
-    it 'return correct value' do
-      KNOWN_CURRENCIES.each do |currency|
-        method = "from_#{currency}".to_sym
-        expect(Money.send(method, 10.3).inspect).to eq("#<CurrencyConverter::Money 10.3 #{currency.upcase}>")
-      end
-    end
-  end
-
-  describe '#to_<currency>' do
-    before { allow(Rates).to receive(:index).and_return(rate) }
-
-    it 'return correct values' do
-      CONVERSIONS.each do |cm|
-        expect(money.send(cm)).to eq(money.amount * rate)
-      end
-    end
-
-    it 'raises NoMethodError if <currency> is unknown' do
-      expect { money.to_unknown }.to raise_error(NoMethodError)
-    end
-
-    it 'Money instances responses to these methods' do
-      CONVERSIONS.each do |cm|
-        expect(money).to respond_to(cm)
-      end
-    end
+    it { expect(money.inspect).to eq('#<CurrencyConverter::Money 10.54 PLN>') }
   end
 
   describe 'Money(amount, currency)' do
     let (:money_2) { Money(10.55, 'usd') }
-
-    it 'returns correct class instance' do
-      expect(money_2).to be_instance_of(Money)
-    end
-
-    it 'returns correct value' do
-      expect(money_2.inspect).to eq("#<CurrencyConverter::Money 10.55 USD>")
-    end
-
+    it { expect(money_2).to be_instance_of(Money) }
+    it { expect(money_2.inspect).to eq("#<CurrencyConverter::Money 10.55 USD>") }
     it 'raises error if no currency is given' do
       expect{ Money(10) }.to raise_error
     end
-
     it 'raises error if no amount is given' do
       expect{ Money('usd') }.to raise_error
     end
   end
 
   describe 'exchanging' do
-    context 'when currencies are valid' do
-      before { allow(Rates).to receive(:index).and_return(rate) }
+    describe '::from_<currency>' do
+      KNOWN_CURRENCIES.each do |currency|
+        it { expect(Money).to respond_to("from_#{currency}") }
+      end
 
-      describe '::exchange' do
-        it 'returns correct value' do
+      KNOWN_CURRENCIES.each do |currency|
+        it { expect(Money.send("from_#{currency}", 10.3).inspect).to eq("#<CurrencyConverter::Money 10.3 #{currency.upcase}>") }
+      end
+    end
+
+    describe '#to_<currency>' do
+      let(:result) { BigDecimal('10.0') }
+      let(:exchange) { instance_double('exchange') }
+      before { allow(Exchange).to receive(:new).and_return(exchange) }
+      before { allow(exchange).to receive(:convert).and_return(result) }
+
+      CONVERSIONS.each do |conversion_method|
+        it { expect(money.send(conversion_method)).to eq(result) }
+      end
+
+      it { expect { money.to_unknown }.to raise_error(NoMethodError) }
+
+      CONVERSIONS.each do |conversion_method|
+        it { expect(money).to respond_to(conversion_method) }
+      end
+    end
+
+    describe '::exchange' do
+      context 'when a currency is invalid' do
+        it { expect { Money.exchange.convert(money, 'XXX') }.to raise_exception(InvalidCurrency, 'Unknown ratio: PLN/XXX') }
+      end
+
+      context 'when currencies are valid' do
+        it do
+          allow(Rates).to receive(:index).and_return(rate)
           expect(Money.exchange.convert(money, 'USD')).to eq(21.08)
         end
       end
+    end
 
-      describe '#exchange_to' do
-        it 'returns correct value' do
+    describe '#exchange_to' do
+      context 'when a currency is invalid' do
+        it { expect { money.exchange_to('YYY') }.to raise_exception(InvalidCurrency, 'Unknown ratio: PLN/YYY') }
+      end
+
+      context 'when currencies are valid' do
+        it do
+          allow(Rates).to receive(:index).and_return(rate)
           expect(money.exchange_to('USD')).to eq(21.08)
-        end
-      end
-    end
-
-    context 'when a currency is invalid' do
-      describe '::exchange' do
-        it 'raises InvalidCurrency exception' do
-          expect { Money.exchange.convert(money, 'XXX') }.to raise_exception(InvalidCurrency, 'Unknown ratio: PLN/XXX')
-        end
-      end
-
-      describe '#exchange_to' do
-        it 'raises InvalidCurrency exception' do
-          expect { money.exchange_to('YYY') }.to raise_exception(InvalidCurrency, 'Unknown ratio: PLN/YYY')
-        end
-      end
-    end
-  end
-
-  describe 'comparing' do
-    describe '#==' do
-      it 'returns true for equal values' do
-        expect(money == Money(10.54, 'pln')).to be_truthy
-      end
-
-      context 'when amount is different' do
-        it 'returns false for unequal value' do
-          expect(money == Money(11, 'pln')).to be_falsey
-        end
-      end
-
-      context 'when currency is different' do
-        before { allow(Rates).to receive(:index).with('GBP', 'PLN').and_return(rate) }
-
-        it 'returns false for unequal value' do
-          expect(money == Money(10, 'gbp')).to be_falsey
-        end
-      end
-    end
-
-    describe '#>' do
-      it 'returns false for equal values' do
-        expect(money > Money(10.54, 'pln')).to be_falsey
-      end
-
-      context 'when first value is greater in amount' do
-        it 'returns true' do
-          expect(money > Money(10, 'pln')).to be_truthy
-        end
-      end
-
-      context 'when first value is greater by currency' do
-        before { allow(Rates).to receive(:index).with('PLN', 'GBP').and_return(0.2) }
-        it 'returns true' do
-          expect(Money(10, 'gbp') > money).to be_truthy
-        end
-      end
-
-      context 'when values are same at different currencies' do
-        before { allow(Rates).to receive(:index).with('EUR', 'CHF').and_return(1.0) }
-
-        it 'returns false' do
-          expect(Money(10, 'chf') > Money(10, 'eur')).to be_falsey
-        end
-      end
-    end
-
-    describe '#>=' do
-      it 'returns true for equal values' do
-        expect(money >= Money(10, 'pln')).to be_truthy
-      end
-
-      context 'when first value is greater in amount' do
-        it 'returns true' do
-          expect(money >= Money(9, 'pln')).to be_truthy
-        end
-      end
-
-      context 'when first value is greater by currency' do
-        before { allow(Rates).to receive(:index).with('PLN', 'GBP').and_return(0.2) }
-
-        it 'returns true' do
-          expect(Money(10.54, 'gbp') >= money).to be_truthy
-        end
-      end
-
-      context 'when values are same at different currencies' do
-        before { allow(Rates).to receive(:index).with('EUR', 'CHF').and_return(1.0) }
-
-        it 'returns true' do
-          expect(Money(10, 'chf') >= Money(10, 'eur')).to be_truthy
-        end
-      end
-    end
-
-    describe '#<=>' do
-      context 'when currencies are the same' do
-        context 'when values are equal' do
-          it 'returns 0' do
-            expect(money <=> Money(10.54, 'pln')).to eq(0)
-          end
-        end
-
-        context 'when first value is less than the other' do
-          it 'returns -1' do
-            expect(money <=> Money(11, 'pln')).to eq(-1)
-          end
-        end
-
-        context 'when first value is greater than the other' do
-          it 'returns 1' do
-            expect(money <=> Money(10, 'pln')).to eq(1)
-          end
-        end
-      end
-
-      context 'when currencies are different' do
-        before { allow(Rates).to receive(:index).with('EUR', 'CHF').and_return(1.0) }
-
-        context 'when values are equal' do
-          it 'returns 0' do
-            expect(Money(10, 'chf') <=> Money(10, 'eur')).to eq(0)
-          end
-        end
-
-        context 'when first value is less than the other' do
-          it 'returns -1' do
-            expect(Money(9, 'chf') <=> Money(10, 'eur')).to eq(-1)
-          end
-        end
-
-        context 'when first value is greater than the other' do
-          it 'returns 1' do
-            expect(Money(10, 'chf') <=> Money(9, 'eur')).to eq(1)
-          end
         end
       end
     end
